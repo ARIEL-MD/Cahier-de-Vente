@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# PWA generated files (built, not committed)
+dev-dist/
