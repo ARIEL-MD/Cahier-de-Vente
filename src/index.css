@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Epilogue", sans-serif;
+  --font-sans: "Public Sans", sans-serif;
+
+  /* Palette Identité Papeterie CI */
+  --color-velin: #F8F5EE;
+  --color-encre: #181614;
+  --color-registre: #1B4D3E;
+  --color-registre-dark: #13392E;
+  --color-registre-light: #246552;
+  --color-registre-soft: #E9F1ED;
+  --color-terrecuite: #C34B22;
+  --color-terrecuite-hover: #A83E1B;
+  --color-terrecuite-soft: #FBF0EB;
+  --color-savane: #B45309;
+  --color-savane-soft: #FEF3C7;
+  --color-bordure: #E5DFD5;
+  --color-bordure-strong: #D5CDC0;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F3EFE6;
+  --color-muted: #6B655B;
+  --color-muted-light: #8E877B;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-velin);
+    color: var(--color-encre);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+
+  /* Chiffres tabulaires systématiques pour alignement parfait des montants */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Lignes de cahier d'écolier subtiles pour les impressions ou reçus */
+.ruled-ledger {
+  background-image: linear-gradient(to bottom, transparent 96%, #E5DFD5 96%);
+  background-size: 100% 2.2rem;
+}
