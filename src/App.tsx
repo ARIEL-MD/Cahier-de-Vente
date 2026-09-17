@@ -18,6 +18,7 @@ import {
   saveSettings,
   resetToDefaults,
 } from './utils/storage';
+import { fetchRemoteData, pushRemoteData, isRemoteConfigured } from './utils/api';
 import { formatFCFA, formatShortF, isToday } from './utils/formatters';
 import { playSaleChime } from './utils/audio';
 
@@ -27,7 +28,7 @@ import { ProductCatalogView } from './components/ProductCatalogView';
 import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
 import { ReceiptModal } from './components/ReceiptModal';
-import { CheckCircle2, AlertCircle } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Cloud, CloudOff, RefreshCw } from 'lucide-react';
 
 export default function App() {
   // Application State with LocalStorage Persistence
@@ -60,7 +61,41 @@ export default function App() {
     }, 3200);
   };
 
-  // Synchronisation avec LocalStorage
+  // Indique si le chargement initial (local + serveur) est terminé
+  const [hydrated, setHydrated] = useState(false);
+  // Statut de synchronisation avec le serveur, affiché discrètement dans l'UI
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error' | 'offline'>(
+    isRemoteConfigured() ? 'syncing' : 'offline'
+  );
+
+  // Au démarrage : tente de récupérer les données depuis le serveur.
+  // Si le serveur a des données, elles remplacent l'état local (source de vérité partagée).
+  // Si le serveur est injoignable ou n'a rien, on garde les données locales.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (isRemoteConfigured()) {
+        const remote = await fetchRemoteData();
+        if (!cancelled) {
+          if (remote) {
+            setSettings(remote.settings);
+            setCategories(remote.categories);
+            setProducts(remote.products);
+            setSales(remote.sales);
+            setSyncStatus('idle');
+          } else {
+            setSyncStatus('error');
+          }
+        }
+      }
+      if (!cancelled) setHydrated(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Synchronisation avec LocalStorage (instantanée, fonctionne hors-ligne)
   useEffect(() => {
     saveSettings(settings);
   }, [settings]);
@@ -76,6 +111,17 @@ export default function App() {
   useEffect(() => {
     saveSales(sales);
   }, [sales]);
+
+  // Synchronisation avec le serveur (avec un léger délai pour regrouper les changements rapides)
+  useEffect(() => {
+    if (!hydrated || !isRemoteConfigured()) return;
+    setSyncStatus('syncing');
+    const timeout = setTimeout(async () => {
+      const ok = await pushRemoteData({ settings, categories, products, sales });
+      setSyncStatus(ok ? 'idle' : 'error');
+    }, 800);
+    return () => clearTimeout(timeout);
+  }, [hydrated, settings, categories, products, sales]);
 
   // Ventes du jour pour le badge
   const todaySalesCount = useMemo(() => {
@@ -353,6 +399,30 @@ export default function App() {
         settings={settings}
         onClose={() => setSelectedReceiptSale(null)}
       />
+
+      {/* Indicateur discret de synchronisation avec le serveur */}
+      {isRemoteConfigured() && (
+        <div
+          className={`fixed bottom-20 sm:bottom-6 right-3 sm:right-6 z-40 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm backdrop-blur-xs transition-colors ${
+            syncStatus === 'error'
+              ? 'bg-[#FEF2F2] text-[#B91C1C] border border-[#FCA5A5]'
+              : syncStatus === 'syncing'
+              ? 'bg-white/90 text-[#6B655B] border border-[#E5DFD5]'
+              : 'bg-[#E9F1ED] text-[#1B4D3E] border border-[#1B4D3E]/20'
+          }`}
+        >
+          {syncStatus === 'syncing' && <RefreshCw className="h-3 w-3 animate-spin" />}
+          {syncStatus === 'idle' && <Cloud className="h-3 w-3" />}
+          {syncStatus === 'error' && <CloudOff className="h-3 w-3" />}
+          <span>
+            {syncStatus === 'syncing'
+              ? 'Synchronisation…'
+              : syncStatus === 'error'
+              ? 'Hors-ligne'
+              : 'Sauvegardé'}
+          </span>
+        </div>
+      )}
 
       {/* Toast de confirmation instantanée */}
       {toastMessage && (
