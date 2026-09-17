@@ -1,4 +1,4 @@
-# Cahier de Vente CI
+# Cahier de Vente
 
 Cahier de caisse numérique simple et rapide pour enregistrer les ventes du jour en F CFA.
 

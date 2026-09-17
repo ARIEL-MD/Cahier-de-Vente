@@ -13,7 +13,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon-32.png', 'apple-touch-icon.png'],
         manifest: {
-          name: 'Cahier de Vente CI',
+          name: 'Cahier de Vente',
           short_name: 'Cahier de Vente',
           description:
             'Cahier de caisse numérique simple et rapide pour enregistrer les ventes du jour en F CFA.',
