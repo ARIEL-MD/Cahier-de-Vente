@@ -12,6 +12,8 @@ import {
   Box,
   Layers,
   Star,
+  Printer,
+  Utensils,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -29,6 +31,8 @@ export const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   box: Box,
   layers: Layers,
   star: Star,
+  printer: Printer,
+  utensils: Utensils,
 };
 
 export const CATEGORY_ICON_OPTIONS = Object.keys(CATEGORY_ICON_MAP) as Array<

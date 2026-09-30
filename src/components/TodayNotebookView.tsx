@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Eye,
   Copy,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   buildWhatsAppSummaryText,
@@ -157,7 +158,7 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
 
   // Recherche et filtres par rayon
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   // Modification rapide de prix en direct
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -175,7 +176,7 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
         .replace(/scotche/g, 'scotch');
 
     return products.filter((p) => {
-      if (selectedCategory !== 'all' && p.categoryId !== selectedCategory) {
+      if (selectedCategory && p.categoryId !== selectedCategory) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -365,9 +366,19 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
                       >
                         -
                       </button>
-                      <span className="w-7 text-center text-xs sm:text-sm font-black text-[#181614] tabular-nums">
-                        {item.quantity}
-                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        inputMode="numeric"
+                        value={item.quantity}
+                        onChange={(e) => {
+                          const v = parseInt(e.target.value, 10);
+                          if (!isNaN(v) && v > 0) updateCartItemQty(item.id, v);
+                        }}
+                        onFocus={(e) => e.target.select()}
+                        className="w-12 bg-transparent text-center text-xs sm:text-sm font-black text-[#181614] tabular-nums focus:outline-hidden"
+                        aria-label="Quantité"
+                      />
                       <button
                         type="button"
                         onClick={() => updateCartItemQty(item.id, item.quantity + 1)}
@@ -425,35 +436,22 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
 
       {/* 3. FOURNITURES SCOLAIRES */}
       <div className="rounded-2xl border border-[#E5DFD5] bg-white p-4 sm:p-5 shadow-xs">
-        {/* Filtres par catégories / rayons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-3 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('all')}
-            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-[#1B4D3E] text-white shadow-xs'
-                : 'bg-[#F3EFE6] text-[#6B655B] border border-[#E5DFD5] hover:text-[#181614]'
-            }`}
-          >
-            Tous les rayons ({products.length})
-          </button>
-          {categories.map((cat) => (
+        {/* Retour aux catégories quand une catégorie est ouverte */}
+        {selectedCategory && (
+          <div className="mb-3 flex items-center gap-2">
             <button
-              key={cat.id}
               type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                selectedCategory === cat.id
-                  ? 'bg-[#1B4D3E] text-white shadow-xs'
-                  : 'bg-[#F3EFE6] text-[#6B655B] border border-[#E5DFD5] hover:text-[#181614]'
-              }`}
+              onClick={() => { setSelectedCategory(''); setSearchQuery(''); }}
+              className="flex items-center gap-1.5 rounded-xl bg-[#F3EFE6] border border-[#E5DFD5] px-3 py-2 text-xs sm:text-sm font-bold text-[#181614] hover:bg-white cursor-pointer"
             >
-              <CategoryIcon icon={cat.icon} className="h-3.5 w-3.5" />
-              <span>{cat.name}</span>
+              <ArrowLeft className="h-4 w-4" />
+              Retour
             </button>
-          ))}
-        </div>
+            <span className="font-display text-sm sm:text-base font-extrabold text-[#181614]">
+              {categories.find((c) => c.id === selectedCategory)?.name}
+            </span>
+          </div>
+        )}
 
         {/* Recherche rapide */}
         <div className="relative mb-3">
@@ -467,8 +465,27 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
           />
         </div>
 
-        {/* Grille d'articles scolaires */}
-        {filteredProducts.length === 0 ? (
+        {/* Étape 1 : gros boutons de catégories (rien d'autre à l'écran) */}
+        {!selectedCategory && !searchQuery.trim() ? (
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+            {[...categories].sort((x, y) => x.order - y.order).map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#E5DFD5] bg-[#F8F5EE]/70 px-3 py-5 text-center transition-all hover:border-[#1B4D3E] hover:bg-white hover:shadow-xs active:scale-[0.97] cursor-pointer"
+              >
+                <CategoryIcon icon={cat.icon} className="h-7 w-7 text-[#1B4D3E]" />
+                <span className="text-xs sm:text-sm font-extrabold leading-tight text-[#181614]">
+                  {cat.name}
+                </span>
+                <span className="text-[10px] font-bold text-[#8E877B]">
+                  {products.filter((p) => p.categoryId === cat.id).length} articles
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[#E5DFD5] bg-[#F8F5EE] p-6 text-center">
             <p className="text-xs font-bold text-[#6B655B]">
               Aucun article trouvé pour ces critères de recherche.
