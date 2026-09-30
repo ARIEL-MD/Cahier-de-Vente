@@ -8,9 +8,21 @@ const STORAGE_KEYS = {
   SETTINGS: 'caisse_scolaire_settings_v5',
 };
 
-// Set d'IDs d'articles officiels autorisés
-const VALID_PRODUCT_IDS = new Set(INITIAL_PRODUCTS.map((p) => p.id));
-const VALID_CATEGORY_IDS = new Set(INITIAL_CATEGORIES.map((c) => c.id));
+
+// Fusionne une liste enregistrée (locale ou serveur) avec la liste officielle :
+// on GARDE tout ce qui existe déjà (y compris les articles ajoutés à la main)
+// et on AJOUTE seulement les articles/catégories officiels qui manquent.
+export function mergeProducts(list: Product[]): Product[] {
+  const existingIds = new Set(list.map((p) => p.id));
+  const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
+  return missing.length > 0 ? [...missing, ...list] : list;
+}
+
+export function mergeCategories(list: Category[]): Category[] {
+  const existingIds = new Set(list.map((c) => c.id));
+  const missing = INITIAL_CATEGORIES.filter((c) => !existingIds.has(c.id));
+  return missing.length > 0 ? [...missing, ...list] : list;
+}
 
 export function loadSettings(): StoreSettings {
   try {
@@ -46,11 +58,7 @@ export function loadCategories(): Category[] {
       saveCategories(INITIAL_CATEGORIES);
       return INITIAL_CATEGORIES;
     }
-    // Nettoie et ne garde que les catégories officielles demandées
-    const validOnly = parsed.filter((c) => VALID_CATEGORY_IDS.has(c.id));
-    const existingIds = new Set(validOnly.map((c) => c.id));
-    const missing = INITIAL_CATEGORIES.filter((c) => !existingIds.has(c.id));
-    const merged = missing.length > 0 ? [...missing, ...validOnly] : validOnly;
+    const merged = mergeCategories(parsed);
     saveCategories(merged);
     return merged;
   } catch (err) {
@@ -79,11 +87,7 @@ export function loadProducts(): Product[] {
       saveProducts(INITIAL_PRODUCTS);
       return INITIAL_PRODUCTS;
     }
-    // Nettoie strictement : élimine tous les anciens articles non demandés
-    const validOnly = parsed.filter((p) => VALID_PRODUCT_IDS.has(p.id));
-    const existingIds = new Set(validOnly.map((p) => p.id));
-    const missing = INITIAL_PRODUCTS.filter((p) => !existingIds.has(p.id));
-    const merged = missing.length > 0 ? [...missing, ...validOnly] : validOnly;
+    const merged = mergeProducts(parsed);
     saveProducts(merged);
     return merged;
   } catch (err) {

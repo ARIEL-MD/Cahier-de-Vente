@@ -9,6 +9,8 @@ import {
 } from './types';
 import {
   loadCategories,
+  mergeCategories,
+  mergeProducts,
   loadProducts,
   loadSales,
   loadSettings,
@@ -79,8 +81,9 @@ export default function App() {
         if (!cancelled) {
           if (remote) {
             setSettings(remote.settings);
-            setCategories(remote.categories);
-            setProducts(remote.products);
+            // Fusion : garde les données du serveur et ajoute les nouveaux articles officiels
+            setCategories(mergeCategories(remote.categories));
+            setProducts(mergeProducts(remote.products));
             setSales(remote.sales);
             setSyncStatus('idle');
           } else {
