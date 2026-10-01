@@ -840,8 +840,8 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
               </label>
               <input
                 type="number"
-                min="25"
-                step="25"
+                min="1"
+                step="1"
                 value={editPriceValue}
                 onChange={(e) => setEditPriceValue(Number(e.target.value) || 0)}
                 className="mt-1.5 w-full rounded-xl border border-[#E5DFD5] px-4 py-3 text-center font-display text-2xl font-black text-[#1B4D3E] focus:border-[#1B4D3E] focus:outline-hidden tabular-nums"

@@ -15,6 +15,7 @@ interface Line {
   name: string;
   quantity: number;
   amount: number;
+  unitPrice: number;
   folderId: string;
 }
 
@@ -67,6 +68,7 @@ export const FoldersView: React.FC<FoldersViewProps> = ({ sales, categories }) =
           name: it.productName,
           quantity: it.quantity,
           amount: it.subtotal,
+          unitPrice: it.quantity > 0 ? Math.round(it.subtotal / it.quantity) : it.subtotal,
           folderId: folderOf(it.productName, it.categoryId),
         })
       );
@@ -99,15 +101,16 @@ export const FoldersView: React.FC<FoldersViewProps> = ({ sales, categories }) =
   const dayTotal = lines.reduce((s, l) => s + l.amount, 0);
   const current = folders.find((f) => f.id === openFolder) || null;
 
-  // Récap par type d'article dans le dossier ouvert
+  // Tableau Travail / Prix / Prix total (regroupé par article et prix unitaire)
   const recap = useMemo(() => {
     if (!current) return [];
-    const map = new Map<string, { name: string; quantity: number; amount: number }>();
+    const map = new Map<string, { name: string; unitPrice: number; quantity: number; amount: number }>();
     for (const l of current.lines) {
-      const e = map.get(l.name) || { name: l.name, quantity: 0, amount: 0 };
+      const k = `${l.name}|${l.unitPrice}`;
+      const e = map.get(k) || { name: l.name, unitPrice: l.unitPrice, quantity: 0, amount: 0 };
       e.quantity += l.quantity;
       e.amount += l.amount;
-      map.set(l.name, e);
+      map.set(k, e);
     }
     return [...map.values()].sort((a, b) => b.amount - a.amount);
   }, [current]);
@@ -211,21 +214,39 @@ export const FoldersView: React.FC<FoldersViewProps> = ({ sales, categories }) =
             </p>
           </div>
 
-          {/* Récap par type */}
-          <div className="rounded-2xl border border-[#E5DFD5] bg-white p-4 shadow-xs">
-            <h3 className="text-xs font-extrabold uppercase tracking-wide text-[#6B655B]">Par type</h3>
-            <div className="mt-2 divide-y divide-[#E5DFD5]">
+          {/* Tableau : Travail / Prix / Prix total */}
+          <div className="overflow-hidden rounded-2xl border border-[#E5DFD5] bg-white shadow-xs">
+            <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 bg-[#E9F1ED] px-4 py-2.5 text-[11px] font-extrabold uppercase tracking-wide text-[#1B4D3E]">
+              <span>Travail</span>
+              <span className="text-right">Prix</span>
+              <span className="min-w-[84px] text-right">Prix total</span>
+            </div>
+            <div className="divide-y divide-[#E5DFD5]">
               {recap.map((r) => (
-                <div key={r.name} className="flex items-center justify-between gap-3 py-2.5">
+                <div
+                  key={`${r.name}|${r.unitPrice}`}
+                  className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 px-4 py-3"
+                >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#181614]">{r.name}</p>
-                    <p className="text-[11px] font-medium text-[#8E877B]">× {r.quantity}</p>
+                    <p className="text-sm font-bold leading-tight text-[#181614]">{r.name}</p>
+                    {r.quantity > 1 && (
+                      <p className="text-[11px] font-bold text-[#8E877B]">× {r.quantity}</p>
+                    )}
                   </div>
-                  <span className="font-display text-sm font-black tabular-nums text-[#1B4D3E]">
-                    {formatFCFA(r.amount)}
+                  <span className="text-right text-sm font-bold tabular-nums text-[#6B655B]">
+                    {formatShortF(r.unitPrice)}
+                  </span>
+                  <span className="font-display min-w-[84px] text-right text-sm font-black tabular-nums text-[#1B4D3E]">
+                    {formatShortF(r.amount)}
                   </span>
                 </div>
               ))}
+            </div>
+            <div className="grid grid-cols-[1fr_auto] gap-x-4 border-t-2 border-[#1B4D3E] bg-[#F8F5EE] px-4 py-3">
+              <span className="text-sm font-extrabold uppercase text-[#181614]">Total</span>
+              <span className="font-display text-base font-black tabular-nums text-[#1B4D3E]">
+                {formatFCFA(current.total)}
+              </span>
             </div>
           </div>
 

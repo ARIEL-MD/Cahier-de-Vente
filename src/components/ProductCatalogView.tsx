@@ -232,8 +232,8 @@ export const ProductCatalogView: React.FC<ProductCatalogViewProps> = ({
                 <input
                   type="number"
                   required
-                  min="25"
-                  step="25"
+                  min="1"
+                  step="1"
                   value={newProductPrice}
                   onChange={(e) => setNewProductPrice(e.target.value)}
                   className="mt-1 w-full rounded-xl border border-[#E5DFD5] px-3.5 py-2 text-center font-display text-xl font-black text-[#1B4D3E] focus:border-[#1B4D3E] focus:outline-hidden tabular-nums"
@@ -286,8 +286,8 @@ export const ProductCatalogView: React.FC<ProductCatalogViewProps> = ({
               </label>
               <input
                 type="number"
-                min="25"
-                step="25"
+                min="1"
+                step="1"
                 value={editPrice}
                 onChange={(e) => setEditPrice(Number(e.target.value) || 0)}
                 className="mt-1.5 w-full rounded-xl border border-[#E5DFD5] px-4 py-3 text-center font-display text-2xl font-black text-[#1B4D3E] focus:border-[#1B4D3E] focus:outline-hidden tabular-nums"
