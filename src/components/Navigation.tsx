@@ -6,6 +6,7 @@ import {
   Calendar,
   Settings,
   Store,
+  FolderOpen,
 } from 'lucide-react';
 
 interface NavigationProps {
@@ -33,6 +34,13 @@ export const Navigation: React.FC<NavigationProps> = ({
       icon: <BookOpen className="h-5 w-5" />,
       badge: todaySalesCount > 0 ? todaySalesCount : undefined,
       isActive: isTodayActive,
+    },
+    {
+      id: 'folders' as ActiveTab,
+      label: 'Dossiers',
+      shortLabel: 'Dossiers',
+      icon: <FolderOpen className="h-5 w-5" />,
+      isActive: activeTab === 'folders',
     },
     {
       id: 'products' as ActiveTab,
@@ -104,7 +112,7 @@ export const Navigation: React.FC<NavigationProps> = ({
 
       {/* Barre tactile inférieure pour téléphone Android (gros boutons pour les doigts) */}
       <div className="fixed bottom-0 left-0 right-0 z-40 block md:hidden border-t border-[#E5DFD5] bg-white shadow-xl backdrop-blur-md">
-        <div className="grid grid-cols-4 items-center px-1 py-1.5">
+        <div className="grid grid-cols-5 items-center px-1 py-1.5">
           {navItems.map((item) => (
             <button
               key={item.id}

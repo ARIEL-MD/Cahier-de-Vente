@@ -58,6 +58,6 @@ export interface StoreSettings {
   receiptFooter: string;
 }
 
-export type ActiveTab = 'today' | 'products' | 'history' | 'settings' | 'dashboard' | 'sales' | 'stock' | 'reports';
+export type ActiveTab = 'today' | 'folders' | 'products' | 'history' | 'settings' | 'dashboard' | 'sales' | 'stock' | 'reports';
 
 export type HistoryDateFilter = 'today' | 'yesterday' | 'week' | 'month' | 'custom' | 'all';

@@ -27,6 +27,7 @@ import { playSaleChime } from './utils/audio';
 import { Navigation } from './components/Navigation';
 import { TodayNotebookView } from './components/TodayNotebookView';
 import { ProductCatalogView } from './components/ProductCatalogView';
+import { FoldersView } from './components/FoldersView';
 import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
 import { ReceiptModal } from './components/ReceiptModal';
@@ -330,6 +331,7 @@ export default function App() {
   const isProductsView = activeTab === 'products' || activeTab === 'stock';
   const isHistoryView = activeTab === 'history' || activeTab === 'reports';
   const isSettingsView = activeTab === 'settings';
+  const isFoldersView = activeTab === 'folders';
 
   return (
     <div className="min-h-screen bg-[#F8F5EE] text-[#181614] flex flex-col font-sans">
@@ -359,6 +361,8 @@ export default function App() {
             onOpenProductList={() => setActiveTab('products')}
           />
         )}
+
+        {isFoldersView && <FoldersView sales={sales} categories={categories} />}
 
         {/* VUE 2 : MES ARTICLES & PRIX (Modifier et fixer ses prix sans stock) */}
         {isProductsView && (
