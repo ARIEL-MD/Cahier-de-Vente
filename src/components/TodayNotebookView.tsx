@@ -19,6 +19,7 @@ import {
   Eye,
   Copy,
   ArrowLeft,
+  Zap,
 } from 'lucide-react';
 import {
   buildWhatsAppSummaryText,
@@ -156,6 +157,36 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
     setCartItems([]);
   };
 
+  // --- VENTE RAPIDE : "Cahier 5000 F", "Photocopie 1000 F"... ---
+  const QUICK_TYPES: { label: string; categoryId?: string }[] = [
+    { label: 'Cahier 100P' },
+    { label: 'Cahier 200P' },
+    { label: 'Cahier 300P' },
+    { label: 'Cahier TP' },
+    { label: 'Cahier Étudiant' },
+    { label: 'Photocopie', categoryId: 'cat-photocopie' },
+    { label: 'Panini', categoryId: 'cat-panini' },
+    { label: 'Stylo / Crayon' },
+    { label: 'Autre' },
+  ];
+  const [quickLabel, setQuickLabel] = useState('');
+  const [quickAmount, setQuickAmount] = useState('');
+  const [quickQty, setQuickQty] = useState('1');
+
+  const handleQuickSale = () => {
+    const amount = parseInt(quickAmount, 10);
+    const qty = Math.max(1, parseInt(quickQty, 10) || 1);
+    const label = quickLabel.trim();
+    if (!label || isNaN(amount) || amount <= 0) return;
+    const type = QUICK_TYPES.find((t) => t.label === label);
+    onDirectSale(label, amount, qty, type?.categoryId);
+    setQuickLabel('');
+    setQuickAmount('');
+    setQuickQty('1');
+  };
+
+  const quickReady = quickLabel.trim() !== '' && parseInt(quickAmount, 10) > 0;
+
   // Recherche et filtres par rayon
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -280,6 +311,86 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* 1bis. VENTE RAPIDE : type + montant, sans passer par le panier */}
+      <div className="rounded-2xl border border-[#E5DFD5] bg-white p-4 sm:p-5 shadow-xs">
+        <div className="flex items-center gap-2.5 border-b border-[#E5DFD5] pb-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#C34B22] text-white shadow-xs">
+            <Zap className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="font-display text-sm sm:text-base font-extrabold text-[#181614]">
+              Vente rapide
+            </h2>
+            <p className="text-[11px] text-[#6B655B]">
+              Choisissez le type, tapez le montant, c'est noté.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {QUICK_TYPES.map((t) => (
+            <button
+              key={t.label}
+              type="button"
+              onClick={() => setQuickLabel(t.label === 'Autre' ? '' : t.label)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                quickLabel === t.label
+                  ? 'border-[#1B4D3E] bg-[#1B4D3E] text-white'
+                  : 'border-[#E5DFD5] bg-[#F3EFE6] text-[#181614] hover:border-[#1B4D3E]'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_90px]">
+          <input
+            type="text"
+            value={quickLabel}
+            onChange={(e) => setQuickLabel(e.target.value)}
+            placeholder="Article vendu (ex: Cahier 200P)"
+            className="rounded-xl border border-[#E5DFD5] bg-[#F8F5EE] px-3 py-2.5 text-sm font-medium text-[#181614] focus:border-[#1B4D3E] focus:bg-white focus:outline-hidden"
+          />
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={quickAmount}
+            onChange={(e) => setQuickAmount(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleQuickSale()}
+            placeholder="Montant F"
+            className="rounded-xl border border-[#E5DFD5] bg-[#F8F5EE] px-3 py-2.5 text-center text-sm font-black text-[#1B4D3E] tabular-nums focus:border-[#1B4D3E] focus:bg-white focus:outline-hidden"
+          />
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={quickQty}
+            onChange={(e) => setQuickQty(e.target.value)}
+            onFocus={(e) => e.target.select()}
+            aria-label="Quantité"
+            title="Quantité"
+            className="rounded-xl border border-[#E5DFD5] bg-[#F8F5EE] px-3 py-2.5 text-center text-sm font-bold text-[#181614] tabular-nums focus:border-[#1B4D3E] focus:bg-white focus:outline-hidden"
+          />
+        </div>
+        <p className="mt-1 text-[10px] text-[#8E877B]">
+          Le montant est le total encaissé. Quantité : nombre d'articles (1 par défaut).
+        </p>
+
+        <button
+          type="button"
+          onClick={handleQuickSale}
+          disabled={!quickReady}
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1B4D3E] px-5 py-3 text-sm font-display font-extrabold text-white shadow-md hover:bg-[#246552] active:scale-95 transition-all disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+        >
+          <Check className="h-5 w-5 stroke-[2.75]" />
+          <span>
+            Noter la vente{quickReady ? ` : ${quickLabel.trim()} • ${formatShortF(parseInt(quickAmount, 10))}` : ''}
+          </span>
+        </button>
       </div>
 
       {/* 2. LE PANIER CLIENT DU VENDEUR */}
