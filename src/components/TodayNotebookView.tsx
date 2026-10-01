@@ -172,20 +172,34 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
   const [quickLabel, setQuickLabel] = useState('');
   const [quickAmount, setQuickAmount] = useState('');
   const [quickQty, setQuickQty] = useState('1');
+  const [quickBrand, setQuickBrand] = useState<'' | 'privilege' | 'preference'>('');
+
+  const isCahierLabel = quickLabel.trim().toLowerCase().startsWith('cahier');
+  const labelHasBrand = /privil|pr[ée]f[ée]r/i.test(quickLabel);
+  const needsBrand = isCahierLabel && !labelHasBrand;
 
   const handleQuickSale = () => {
     const amount = parseInt(quickAmount, 10);
     const qty = Math.max(1, parseInt(quickQty, 10) || 1);
     const label = quickLabel.trim();
     if (!label || isNaN(amount) || amount <= 0) return;
+    if (needsBrand && !quickBrand) return;
     const type = QUICK_TYPES.find((t) => t.label === label);
-    onDirectSale(label, amount, qty, type?.categoryId);
+    let finalName = label;
+    let catId = type?.categoryId;
+    if (needsBrand) {
+      finalName = `${label} ${quickBrand === 'privilege' ? 'Privilège' : 'Préférence'}`;
+      catId = quickBrand === 'privilege' ? 'cat-privilege' : 'cat-preference';
+    }
+    onDirectSale(finalName, amount, qty, catId);
+    setQuickBrand('');
     setQuickLabel('');
     setQuickAmount('');
     setQuickQty('1');
   };
 
-  const quickReady = quickLabel.trim() !== '' && parseInt(quickAmount, 10) > 0;
+  const quickReady =
+    quickLabel.trim() !== '' && parseInt(quickAmount, 10) > 0 && (!needsBrand || quickBrand !== '');
 
   // Recherche et filtres par rayon
   const [searchQuery, setSearchQuery] = useState('');
@@ -346,6 +360,33 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
           ))}
         </div>
 
+        {needsBrand && (
+          <div className="mt-3">
+            <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#6B655B]">
+              Quelle marque ?
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                ['privilege', 'Privilège'],
+                ['preference', 'Préférence'],
+              ] as const).map(([id, name]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setQuickBrand(id)}
+                  className={`rounded-xl border py-2.5 text-sm font-extrabold transition-colors cursor-pointer ${
+                    quickBrand === id
+                      ? 'border-[#C34B22] bg-[#C34B22] text-white'
+                      : 'border-[#E5DFD5] bg-[#F3EFE6] text-[#181614] hover:border-[#C34B22]'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_90px]">
           <input
             type="text"
@@ -388,7 +429,7 @@ export const TodayNotebookView: React.FC<TodayNotebookViewProps> = ({
         >
           <Check className="h-5 w-5 stroke-[2.75]" />
           <span>
-            Noter la vente{quickReady ? ` : ${quickLabel.trim()} • ${formatShortF(parseInt(quickAmount, 10))}` : ''}
+            Noter la vente{quickReady ? ` : ${quickLabel.trim()}${needsBrand ? (quickBrand === 'privilege' ? ' Privilège' : ' Préférence') : ''} • ${formatShortF(parseInt(quickAmount, 10))}` : ''}
           </span>
         </button>
       </div>

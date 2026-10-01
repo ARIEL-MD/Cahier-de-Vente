@@ -18,19 +18,19 @@ interface Line {
   folderId: string;
 }
 
-const CAHIERS_ID = 'folder-cahiers';
+const CAHIERS_AUTRES_ID = 'folder-cahiers-autres';
 const AUTRES_ID = 'folder-autres';
-const CAHIER_CATS = ['cat-privilege', 'cat-preference'];
 
 const dayKey = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 // Détermine dans quel dossier tombe une ligne de vente
 function folderOf(name: string, categoryId?: string): string {
-  if (categoryId && CAHIER_CATS.includes(categoryId)) return CAHIERS_ID;
   if (categoryId) return categoryId;
   const n = name.toLowerCase();
-  if (n.includes('cahier')) return CAHIERS_ID;
+  if (n.includes('privil')) return 'cat-privilege';
+  if (n.includes('prefer') || n.includes('préfér')) return 'cat-preference';
+  if (n.includes('cahier')) return CAHIERS_AUTRES_ID;
   if (n.includes('photocop')) return 'cat-photocopie';
   if (n.includes('panini')) return 'cat-panini';
   return AUTRES_ID;
@@ -74,14 +74,13 @@ export const FoldersView: React.FC<FoldersViewProps> = ({ sales, categories }) =
     return out.sort((a, b) => (a.date < b.date ? 1 : -1));
   }, [sales, day]);
 
-  // Définition des dossiers (Cahiers regroupe Privilège + Préférence)
+  // Définition des dossiers (Cahiers Privilège et Cahiers Préférence sont séparés)
   const folders = useMemo(() => {
     const defs: { id: string; name: string; icon: string }[] = [
-      { id: CAHIERS_ID, name: 'Cahiers', icon: 'book' },
       ...[...categories]
         .sort((a, b) => a.order - b.order)
-        .filter((c) => !CAHIER_CATS.includes(c.id))
         .map((c) => ({ id: c.id, name: c.name, icon: c.icon })),
+      { id: CAHIERS_AUTRES_ID, name: 'Cahiers (marque non précisée)', icon: 'book' },
       { id: AUTRES_ID, name: 'Autres ventes', icon: 'package' },
     ];
     return defs
